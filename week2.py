@@ -1,32 +1,44 @@
-class LFSR:
-    def __init__(self, seed, taps):
-        self.state = seed
-        self.taps = taps
+def caesar_cipher(text, shift):
+    result = ""
+    for char in text:
+        if char.isalpha():
+            start = ord('A') if char.isupper() else ord('a')
+            result += chr((ord(char) - start + shift) % 26 + start)
+        else:
+            result += char
+    return result
 
-    def step(self):
-        # Calculate feedback bit using XOR logic on tap positions
-        feedback = 0
-        for tap in self.taps:
-            feedback ^= (self.state >> tap) & 1
-        
-        # Output the rightmost bit
-        output_bit = self.state & 1
-        
-        # Shift state right and prepend feedback bit
-        self.state = (self.state >> 1) | (feedback << 3)
-        return output_bit
+def vigenere_cipher(text, key, encrypt=True):
+    result = ""
+    key = key.upper()
+    key_idx = 0
+    for char in text:
+        if char.isalpha():
+            start = ord('A') if char.isupper() else ord('a')
+            shift = ord(key[key_idx % len(key)]) - ord('A')
+            if not encrypt:
+                shift = -shift
+            result += chr((ord(char) - start + shift) % 26 + start)
+            key_idx += 1
+        else:
+            result += char
+    return result
 
-# --- Run 4-bit LFSR simulation with Seed State 0b1011 ---
-lfsr = LFSR(seed=0b1011, taps=[0, 2])
-print("--- BIT4138 Lab Week 2: LFSR Keystream Generation ---")
-print("Initial Seed Verified: 1011\n")
+message = "DEFEND THE CRYPTOGRAPHIC KEY"
+caesar_shift = 3
+vigenere_key = "SECRET"
 
-generated_bits = []
-print("State Transitions:")
-for i in range(10):
-    current_state = bin(lfsr.state)[2:].zfill(4)
-    bit = lfsr.step()
-    generated_bits.append(bit)
-    print(f"Cycle {i+1}: State = {current_state} -> Output Bit = {bit}")
+print("--- BIT4138 Lab Week 1: Cipher Analysis ---")
+print(f"Plaintext: {message}\n")
 
-print(f"\nFinal Generated Keystream Sequence: {''.join(map(str, generated_bits))}")
+# Caesar Execution
+caesar_enc = caesar_cipher(message, caesar_shift)
+print(f"[Caesar Cipher (Shift {caesar_shift})]")
+print(f"Encrypted: {caesar_enc}")
+print(f"Decrypted: {caesar_cipher(caesar_enc, -caesar_shift)}\n")
+
+# Vigenère Execution
+vigenere_enc = vigenere_cipher(message, vigenere_key, encrypt=True)
+print(f"[Vigenère Cipher (Key: {vigenere_key})]")
+print(f"Encrypted: {vigenere_enc}")
+print(f"Decrypted: {vigenere_cipher(vigenere_enc, vigenere_key, encrypt=False)}")
