@@ -24,21 +24,27 @@ def vigenere_cipher(text, key, encrypt=True):
             result += char
     return result
 
-message = "DEFEND THE CRYPTOGRAPHIC KEY"
-caesar_shift = 3
-vigenere_key = "SECRET"
 
-print("--- BIT4138 Lab Week 1: Cipher Analysis ---")
-print(f"Plaintext: {message}\n")
+print("---  Lab Week 2: Cipher Analysis ---")
 
-# Caesar Execution
-caesar_enc = caesar_cipher(message, caesar_shift)
-print(f"[Caesar Cipher (Shift {caesar_shift})]")
-print(f"Encrypted: {caesar_enc}")
-print(f"Decrypted: {caesar_cipher(caesar_enc, -caesar_shift)}\n")
+# User Input Validation 
+user_message = input("Enter a message to encrypt (letters and spaces only): ")
+if not all(x.isalpha() or x.isspace() for x in user_message):
+    print("Error: Invalid input. Please use letters only.")
+else:
+    print("Input validated successfully!\n")
+    
+    caesar_shift = 3
+    vigenere_key = "SECRET"
 
-# Vigenère Execution
-vigenere_enc = vigenere_cipher(message, vigenere_key, encrypt=True)
-print(f"[Vigenère Cipher (Key: {vigenere_key})]")
-print(f"Encrypted: {vigenere_enc}")
-print(f"Decrypted: {vigenere_cipher(vigenere_enc, vigenere_key, encrypt=False)}")
+    # Caesar Execution
+    caesar_enc = caesar_cipher(user_message, caesar_shift)
+    print(f"[Caesar Cipher (Shift {caesar_shift})]")
+    print(f"Encrypted: {caesar_enc}")
+    print(f"Decrypted: {caesar_cipher(caesar_enc, -caesar_shift)}\n")
+
+    # Vigenère Execution
+    vigenere_enc = vigenere_cipher(user_message, vigenere_key, encrypt=True)
+    print(f"[Vigenère Cipher (Key: {vigenere_key})]")
+    print(f"Encrypted: {vigenere_enc}")
+    print(f"Decrypted: {vigenere_cipher(vigenere_enc, vigenere_key, encrypt=False)}")
