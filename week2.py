@@ -24,8 +24,7 @@ def vigenere_cipher(text, key, encrypt=True):
             result += char
     return result
 
-
-print("---  Lab Week 2: Cipher Analysis ---")
+gitint("---  Lab Week 2: Cipher Analysis ---")
 
 # User Input Validation 
 user_message = input("Enter a message to encrypt (letters and spaces only): ")
