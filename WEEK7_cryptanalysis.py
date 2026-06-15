@@ -1,42 +1,56 @@
-import collections
+def string_to_binary(text):
+    """Converts a string to a continuous binary sequence."""
+    return ''.join(format(ord(c), '08b') for c in text)
 
-print("--- BIT4138 Advanced Task: Mini Cryptanalysis Toolkit ---\n")
-
-def run_toolkit(text1, text2):
-    # 1. Calculate Input Differences
-    print("[+] 1. Input Difference Analysis")
-    # Pad strings to equal length for comparison
-    max_len = max(len(text1), len(text2))
-    t1_pad, t2_pad = text1.ljust(max_len), text2.ljust(max_len)
+def calculate_xor_difference(bin1, bin2):
+    """Calculates the bitwise XOR difference between two binary strings."""
+    # Ensure equal length for comparison by padding with zeros
+    max_len = max(len(bin1), len(bin2))
+    b1 = bin1.zfill(max_len)
+    b2 = bin2.zfill(max_len)
     
-    diff_count = sum(1 for a, b in zip(t1_pad, t2_pad) if a != b)
-    print(f"Original: {t1_pad}")
-    print(f"Modified: {t2_pad}")
-    print(f"Total Character Differences: {diff_count} out of {max_len}")
+    # Calculate flipped bits and generate the XOR string
+    diff_count = sum(1 for bit1, bit2 in zip(b1, b2) if bit1 != bit2)
+    diff_string = ''.join('1' if bit1 != bit2 else '0' for bit1, bit2 in zip(b1, b2))
+    
+    return diff_string, diff_count, max_len
 
-    # 2. Frequency Analysis
-    print("\n[+] 2. Frequency Analysis (Original Text)")
-    freq = collections.Counter(text1)
-    for char, count in sorted(freq.items()):
-        print(f"  Character '{char}': Occurs {count} times")
+def run_differential_simulation():
+    print("--- BIT4138 Practical Task 1: Differential Cryptanalysis Simulation ---\n")
+    
+    # 1. Accept two plaintext inputs
+    plaintext1 = input("Enter Plaintext 1 (Original): ")
+    plaintext2 = input("Enter Plaintext 2 (Modified): ")
+    
+    print("\n" + "="*50)
+    print(" PROCESSING DATA...")
+    print("="*50)
+    
+    bin1 = string_to_binary(plaintext1)
+    bin2 = string_to_binary(plaintext2)
+    
+    print(f"Input 1 (Binary): {bin1}")
+    print(f"Input 2 (Binary): {bin2}")
+    
+    # 2. Compute differences
+    diff_string, diff_count, total_bits = calculate_xor_difference(bin1, bin2)
+    diff_percentage = (diff_count / total_bits) * 100 if total_bits > 0 else 0
+    
+    # 3. Display observations
+    print("\n" + "="*50)
+    print(" DIFFERENTIAL OBSERVATIONS & ANALYSIS")
+    print("="*50)
+    print(f"XOR Difference Map: {diff_string}")
+    print(f"Total Bits Flipped: {diff_count} out of {total_bits} bits")
+    print(f"Difference Rate   : {diff_percentage:.2f}%\n")
+    
+    print("Conclusion:")
+    if diff_percentage == 0:
+        print("[-] Inputs are identical. No differential mapping to track.")
+    elif diff_percentage < 30:
+        print("[-] Weak differential separation. Inputs share too many structural similarities.")
+    else:
+        print("[+] Strong differential variance. Differences propagated widely across the bit structure.")
 
-    # 3. Measure Statistical Bias
-    print("\n[+] 3. Statistical Bias Measurement")
-    if len(text1) > 0:
-        expected_freq = len(text1) / len(set(text1))
-        # Variance formula to measure how far the text deviates from random distribution
-        bias_variance = sum((count - expected_freq)**2 for count in freq.values()) / len(freq)
-        print(f"Expected uniform frequency: {expected_freq:.2f}")
-        print(f"Calculated Bias Variance: {bias_variance:.2f}")
-        if bias_variance > 2.0:
-            print(" Warning: High statistical bias detected. Vulnerable to frequency analysis.")
-        else:
-            print(" Good: Low statistical bias. Characters are uniformly distributed.")
-
-# Automatic Execution
-user_t1 = input("Enter Original Plaintext: ")
-user_t2 = input("Enter Modified Plaintext: ")
-
-print("\nProcessing...\n" + "-"*40)
-run_toolkit(user_t1, user_t2)
-print("-" * 40)
+if __name__ == "__main__":
+    run_differential_simulation()
