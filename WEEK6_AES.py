@@ -1,59 +1,52 @@
+import streamlit as st
 import random
 
-print("--- BIT4138 Challenge Task: Mini-AES Simulator ---")
+st.set_page_config(page_title="Advanced SPN Simulator", layout="centered")
 
-# Generate invertible S-Box pair for Encryption & Decryption
-aes_seed = random.Random(500)
-AES_S_BOX = list(range(256))
-aes_seed.shuffle(AES_S_BOX)
-# Create inverse mapping array
-AES_INV_S_BOX = [AES_S_BOX.index(byte) for byte in range(256)]
+st.title("🔒 Advanced Multi-Round SPN Simulator")
+st.write("This graphical dashboard demonstrates confusion, diffusion, and the avalanche effect.")
 
-def add_round_key(state, key):
-    """XOR state with the custom key matrix."""
-    k_bytes = key.encode('utf-8')
-    return bytes([state[i] ^ k_bytes[i % len(k_bytes)] for i in range(len(state))])
+# Core Logic
+random_gen = random.Random(101)
+S_BOX = list(range(256))
+random_gen.shuffle(S_BOX)
 
-def sub_bytes(state, sbox):
-    """Applies non-linear substitution."""
-    return bytes([sbox[b] for b in state])
+def key_mixing(data, key):
+    key_bytes = key.encode('utf-8')
+    return bytes([data[i] ^ key_bytes[i % len(key_bytes)] for i in range(len(data))])
 
-def shift_rows_permutation(state):
-    """Permutes the state block by performing a left circular shift."""
-    if len(state) <= 1: return state
-    return bytes(list(state[1:]) + [state[0]])
+def substitution_layer(data):
+    return bytes([S_BOX[b] for b in data])
 
-def inv_shift_rows_permutation(state):
-    """Reverses the left circular shift by shifting right."""
-    if len(state) <= 1: return state
-    return bytes([state[-1]] + list(state[:-1]))
+def permutation_layer(data):
+    return data[::-1]
 
-# --- MAIN ENCRYPTION & DECRYPTION LOOPS ---
+def run_spn(plaintext, key, total_rounds):
+    current_block = plaintext.encode('utf-8')
+    for r in range(total_rounds):
+        current_block = key_mixing(current_block, key)
+        current_block = substitution_layer(current_block)
+        current_block = permutation_layer(current_block)
+    return current_block
 
-def aes_encrypt(plaintext, key, rounds):
-    state = plaintext.encode('utf-8')
-    for _ in range(rounds):
-        state = add_round_key(state, key)
-        state = sub_bytes(state, AES_S_BOX)
-        state = shift_rows_permutation(state)
-    return state
+# Graphical Inputs
+user_plaintext1 = st.text_input("Main Plaintext Message:", "ASHLEY")
+user_plaintext2 = st.text_input("Test Plaintext (1 character changed):", "FSHLEY")
+user_key = st.text_input("Custom Secret Key:", "MYSECRETKEY")
+num_rounds = st.slider("Number of Security Rounds:", min_value=1, max_value=10, value=4)
 
-def aes_decrypt(ciphertext_bytes, key, rounds):
-    state = ciphertext_bytes
-    for _ in range(rounds):
-        # Operations run in strict reverse structural order during decryption
-        state = inv_shift_rows_permutation(state)
-        state = sub_bytes(state, AES_INV_S_BOX)
-        state = add_round_key(state, key)
-    return state.decode('utf-8', errors='ignore')
-
-# Execution
-msg = input("Enter your secure message: ")
-key = input("Enter your custom secret key: ")
-rounds = int(input("Enter simulation rounds (e.g., 5): "))
-
-encrypted_bytes = aes_encrypt(msg, key, rounds)
-print(f"\n[Encrypted] Ciphertext Hex: {encrypted_bytes.hex()}")
-
-decrypted_string = aes_decrypt(encrypted_bytes, key, rounds)
-print(f"[Decrypted] Restored Plaintext: {decrypted_string}")
+if st.button("Run SPN & Analyze Avalanche"):
+    if user_plaintext1 and user_plaintext2 and user_key:
+        cipher1 = run_spn(user_plaintext1, user_key, num_rounds)
+        cipher2 = run_spn(user_plaintext2, user_key, num_rounds)
+        
+        # Display Outputs in beautiful UI blocks
+        st.subheader("🔑 Generated Ciphertexts")
+        st.code(f"Ciphertext 1 (Hex): {cipher1.hex()}")
+        st.code(f"Ciphertext 2 (Hex): {cipher2.hex()}")
+        
+        # Avalanche calculation
+        differences = sum(1 for b1, b2 in zip(cipher1, cipher2) if b1 != b2)
+        
+        st.subheader("📊 Avalanche Effect Analysis")
+        st.warning(f"Changing exactly 1 character disrupted **{differences}** out of **{len(cipher1)}** bytes in the final output block.")
